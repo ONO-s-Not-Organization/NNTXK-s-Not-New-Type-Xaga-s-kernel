@@ -14,7 +14,6 @@
 
 #include <linux/types.h>  /* size_t */
 
-
 #define ZSTD_SLIPBLOCK_WORKSPACESIZE 8208
 
 /* ZSTD_splitBlock():
@@ -31,6 +30,5 @@
 size_t ZSTD_splitBlock(const void* blockStart, size_t blockSize,
                     int level,
                     void* workspace, size_t wkspSize);
-
 
 #endif /* ZSTD_PRESPLIT_H */

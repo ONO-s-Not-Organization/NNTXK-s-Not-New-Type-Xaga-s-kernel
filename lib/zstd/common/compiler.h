@@ -150,9 +150,6 @@
 
 /* disable warnings */
 
-/* Like DYNAMIC_BMI2 but for compile time determination of BMI2 support */
-
-
 /* compile time determination of SIMD support */
 
 /* C-language Attributes are added in C23. */
