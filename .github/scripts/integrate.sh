@@ -34,15 +34,26 @@ apply_patch() {
   )
 }
 
-log "Cloning ${KSU_REPO} @ ${KSU_REF}"
-rm -rf "${KSU_DIR}"
-git clone --filter=blob:none "${KSU_CLONE_URL}" "${KSU_DIR}"
-git -C "${KSU_DIR}" checkout --detach "${KSU_REF}"
+# Full tree of the resolved SHA only (no sparse). Reuse dir on fallback.
+fetch_sha() {
+  local url="$1" dir="$2" sha="$3"
+  if [[ ! -d "${dir}/.git" ]]; then
+    rm -rf "${dir}"
+    mkdir -p "${dir}"
+    git -C "${dir}" init
+    git -C "${dir}" remote add origin "${url}"
+  fi
+  git -C "${dir}" fetch --depth=1 origin "${sha}"
+  git -C "${dir}" checkout --detach --force FETCH_HEAD
+  git -C "${dir}" reset --hard FETCH_HEAD
+  git -C "${dir}" clean -ffd
+}
 
-log "Cloning susfs4ksu ${SUSFS_BRANCH} @ ${SUSFS_REF}"
-rm -rf "${SUSFS_DIR}"
-git clone --filter=blob:none --branch "${SUSFS_BRANCH}" "${SUSFS_CLONE_URL}" "${SUSFS_DIR}"
-git -C "${SUSFS_DIR}" checkout --detach "${SUSFS_REF}"
+log "Fetching ${KSU_REPO} @ ${KSU_REF}"
+fetch_sha "${KSU_CLONE_URL}" "${KSU_DIR}" "${KSU_REF}"
+
+log "Fetching susfs4ksu ${SUSFS_BRANCH} @ ${SUSFS_REF}"
+fetch_sha "${SUSFS_CLONE_URL}" "${SUSFS_DIR}" "${SUSFS_REF}"
 
 cp -f "${SUSFS_DIR}/kernel_patches/fs/"* "${ROOT}/fs/"
 cp -f "${SUSFS_DIR}/kernel_patches/include/linux/"* "${ROOT}/include/linux/"

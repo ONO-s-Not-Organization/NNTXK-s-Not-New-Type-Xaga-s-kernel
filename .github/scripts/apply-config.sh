@@ -61,8 +61,8 @@ if ! grep -q "^CONFIG_KSU=y" "${OUT_DIR}/.config" \
   grep -E 'CONFIG_KSU|CONFIG_LOCALVERSION' "${OUT_DIR}/.config" || true
   exit 1
 fi
-if [[ "${KERNEL_RELEASE}" != ${KERNEL_VERSION}-android12-9-*-g*-ab* ]]; then
-  err "KernelRelease does not match Version.PatchLevel.SubLevel-android12-9-suffix: ${KERNEL_RELEASE}"
+if [[ "${KERNEL_RELEASE}" != ${KERNEL_VERSION}-android12-9-114514-g*-ab* ]]; then
+  err "KernelRelease does not match 5.10.66-android12-9-114514-g<sha>-ab<run_id>: ${KERNEL_RELEASE}"
   exit 1
 fi
 log "Kernel config ready at ${OUT_DIR}/.config"

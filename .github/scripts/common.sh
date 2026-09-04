@@ -19,9 +19,9 @@ KSU_CLONE_URL="${KSU_CLONE_URL:-https://github.com/${KSU_REPO}.git}"
 SUSFS_CLONE_URL="${SUSFS_CLONE_URL:-https://gitlab.com/simonpunk/susfs4ksu.git}"
 SUSFS_BRANCH="${SUSFS_BRANCH:-gki-android12-5.10}"
 
-export KBUILD_BUILD_TIMESTAMP="${KBUILD_BUILD_TIMESTAMP:-Fri Sep 1 00:00:00 CST 2023}"
-export KBUILD_BUILD_USER="${KBUILD_BUILD_USER:-xagapro}"
-export KBUILD_BUILD_HOST="${KBUILD_BUILD_HOST:-github-actions}"
+export KBUILD_BUILD_TIMESTAMP="${KBUILD_BUILD_TIMESTAMP:-Wed Feb 8 23:50:57 UTC 2023}"
+export KBUILD_BUILD_USER="${KBUILD_BUILD_USER:-build-user}"
+export KBUILD_BUILD_HOST="${KBUILD_BUILD_HOST:-build-host}"
 export TZ="${TZ:-Asia/Hong_Kong}"
 
 CLANG_DIR="${CLANG_DIR:-${HOME}/toolchains/clang-r416183b}"
@@ -91,6 +91,7 @@ kernel_make() {
     cmd+=(CC="ccache clang" CXX="ccache clang++")
     export CCACHE_DIR="${CCACHE_DIR:-${HOME}/.ccache}"
     export CCACHE_MAXSIZE="${CCACHE_MAXSIZE:-5G}"
+    export CCACHE_COMPILERCHECK="${CCACHE_COMPILERCHECK:-%compiler% --version}"
   else
     cmd+=(CC=clang CXX=clang++)
   fi

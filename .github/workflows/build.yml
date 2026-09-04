@@ -36,9 +36,9 @@ jobs:
       BUILD_TYPE: ${{ inputs.BUILD_TYPE || 'manual' }}
       TZ: Asia/Hong_Kong
       SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
-      KBUILD_BUILD_TIMESTAMP: "Fri Sep 1 00:00:00 CST 2023"
-      KBUILD_BUILD_USER: xagapro
-      KBUILD_BUILD_HOST: github-actions
+      KBUILD_BUILD_TIMESTAMP: "Wed Feb 8 23:50:57 UTC 2023"
+      KBUILD_BUILD_USER: build-user
+      KBUILD_BUILD_HOST: build-host
     steps:
       - name: Free disk space
         run: |
@@ -56,12 +56,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            git curl python3 zip unzip ccache flex bison libssl-dev \
-            libelf-dev bc rsync patch ca-certificates
+            git curl python3 zip ccache flex bison libssl-dev \
+            libelf-dev bc patch ca-certificates
 
       - name: Compute KernelRelease
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
         run: bash .github/scripts/version.sh
 
       - name: Cache clang toolchain

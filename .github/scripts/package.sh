@@ -20,11 +20,10 @@ if [[ -f "${REFS_FILE}" ]]; then
 fi
 
 BUILD_TYPE="${BUILD_TYPE:-manual}"
-IMAGE="${OUT_DIR}/arch/arm64/boot/Image"
 IMAGE_GZ="${OUT_DIR}/arch/arm64/boot/Image.gz"
 
-if [[ ! -f "${IMAGE}" && ! -f "${IMAGE_GZ}" ]]; then
-  err "Kernel Image not found under ${OUT_DIR}/arch/arm64/boot"
+if [[ ! -f "${IMAGE_GZ}" ]]; then
+  err "Kernel Image.gz not found under ${OUT_DIR}/arch/arm64/boot"
   ls -la "${OUT_DIR}/arch/arm64/boot" || true
   exit 1
 fi
@@ -35,20 +34,17 @@ AK_SRC="${ROOT}/anykernel"
 STAGING="${WORK_DIR}/anykernel-pack"
 rm -rf "${STAGING}"
 cp -a "${AK_SRC}" "${STAGING}"
-[[ -f "${IMAGE}" ]] && cp -f "${IMAGE}" "${STAGING}/Image"
-[[ -f "${IMAGE_GZ}" ]] && cp -f "${IMAGE_GZ}" "${STAGING}/Image.gz"
+rm -f "${STAGING}/Image"
+cp -f "${IMAGE_GZ}" "${STAGING}/Image.gz"
 
 if [[ -f "${STAGING}/anykernel.sh" ]]; then
   sed -i "s/^kernel.string=.*/kernel.string=${KERNEL_RELEASE} for ${DEVICE}/" \
     "${STAGING}/anykernel.sh" || true
 fi
 
-KSU_SHORT="${CHOSEN_KSU_REF:-${KSU_REF:-unknown}}"
-SUSFS_SHORT="${CHOSEN_SUSFS_REF:-${SUSFS_REF:-unknown}}"
-KSU_SHORT="${KSU_SHORT:0:12}"
-SUSFS_SHORT="${SUSFS_SHORT:0:12}"
 KERNEL_SRC_COMMIT="$(git -C "${ROOT}" rev-parse HEAD)"
-ZIP_NAME="${DEVICE}-${KERNEL_RELEASE}-${BUILD_TYPE}-${KSU_SHORT}-${SUSFS_SHORT}.zip"
+ZIP_STAMP="$(TZ=Asia/Hong_Kong date +%y%m%d%H)"
+ZIP_NAME="${DEVICE}-${KERNEL_VERSION}-${ZIP_STAMP}-KowSU-SUSFS.zip"
 ZIP_PATH="${WORK_DIR}/${ZIP_NAME}"
 
 (
@@ -64,8 +60,8 @@ with zipfile.ZipFile(path) as zf:
     names = set(zf.namelist())
 if bad:
     raise SystemExit(f"corrupt zip entry: {bad}")
-if "Image" not in names and "Image.gz" not in names:
-    raise SystemExit(f"AnyKernel zip missing Image: {sorted(names)[:20]}")
+if "Image.gz" not in names:
+    raise SystemExit(f"AnyKernel zip missing Image.gz: {sorted(names)[:20]}")
 print("zip ok", path)
 PY
 
@@ -84,7 +80,7 @@ data = {
     "kernel_source_commit": "${KERNEL_SRC_COMMIT}",
     "kernelsu_kow": os.environ.get("CHOSEN_KSU_REF", os.environ.get("KSU_REF", "")),
     "susfs": os.environ.get("CHOSEN_SUSFS_REF", os.environ.get("SUSFS_REF", "")),
-    "pair_label": os.environ.get("CHOSEN_PAIR_LABEL", ""),
+    "pair_label": "${CHOSEN_PAIR_LABEL:-}",
     "build_type": "${BUILD_TYPE}",
     "kernel_build_timestamp": os.environ.get("KBUILD_BUILD_TIMESTAMP", ""),
     "workflow_run_id": os.environ.get("GITHUB_RUN_ID", ""),
