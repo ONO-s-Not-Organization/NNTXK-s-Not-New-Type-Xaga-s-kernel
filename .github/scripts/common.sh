@@ -95,5 +95,5 @@ kernel_make() {
     cmd+=(CC=clang CXX=clang++)
   fi
   cmd+=("$@")
-  "${cmd[@]}"
+  LOCALVERSION= "${cmd[@]}"
 }

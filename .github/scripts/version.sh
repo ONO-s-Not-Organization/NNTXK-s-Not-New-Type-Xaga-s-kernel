@@ -54,18 +54,22 @@ revcount_from_api() {
 
 build_number() {
   local raw="${GITHUB_RUN_ID:-0}"
-  printf '%08d' "${raw}"
+  if [[ ${#raw} -gt 8 ]]; then
+    printf '%s\n' "${raw: -8}"
+  else
+    printf '%08d\n' "${raw}"
+  fi
 }
 
 compute_kernel_release() {
   ensure_work_dir
-  if [[ -n "${KERNEL_RELEASE:-}" && "${KERNEL_RELEASE}" == *-android12-9-*-g*-ab* ]]; then
-    return 0
-  fi
   if [[ -f "${VERSION_ENV}" ]]; then
     # shellcheck disable=SC1090
     source "${VERSION_ENV}"
     export LOCALVERSION KERNEL_RELEASE KERNEL_REVCOUNT KERNEL_SHORTSHA KERNEL_AB
+    return 0
+  fi
+  if [[ -n "${KERNEL_RELEASE:-}" && -n "${LOCALVERSION:-}" && "${KERNEL_RELEASE}" == *-android12-9-*-g*-ab* ]]; then
     return 0
   fi
 
@@ -105,7 +109,6 @@ EOF
   write_github_output localversion "${LOCALVERSION}"
   if [[ -n "${GITHUB_ENV:-}" ]]; then
     {
-      echo "LOCALVERSION=${LOCALVERSION}"
       echo "KERNEL_RELEASE=${KERNEL_RELEASE}"
       echo "KERNEL_REVCOUNT=${KERNEL_REVCOUNT}"
       echo "KERNEL_SHORTSHA=${KERNEL_SHORTSHA}"

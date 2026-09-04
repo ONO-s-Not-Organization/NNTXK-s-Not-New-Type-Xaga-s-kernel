@@ -102,6 +102,7 @@ jobs:
           path: |
             .ci-work/kernel.log
             .ci-work/resolved-refs.env
+            out/.config
             **/*.rej
           if-no-files-found: warn
 
