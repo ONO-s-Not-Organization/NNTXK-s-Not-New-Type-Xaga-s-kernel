@@ -1,0 +1,57 @@
+# Weekly check for KOW kernel/ and SUSFS updates.
+# Manager/APK-only KOW commits do not trigger a rebuild.
+name: Check Updates
+
+on:
+  schedule:
+    - cron: "0 16 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: check-update
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout overlay
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            /.github/scripts/common.sh
+            /.github/scripts/resolve-refs.sh
+            /.github/scripts/check-update.sh
+          sparse-checkout-cone-mode: false
+
+      - name: Install packages
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends python3 curl ca-certificates git
+
+      - name: Compare latest compatible refs
+        id: decide
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/check-update.sh
+
+      - name: Trigger auto build
+        if: ${{ steps.decide.outputs.should_build == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          echo "Starting auto build: ${{ steps.decide.outputs.reason }}"
+          gh workflow run build.yml \
+            --ref "${GITHUB_REF_NAME}" \
+            -f KSU_REF="${{ steps.decide.outputs.latest_ksu }}" \
+            -f SUSFS_REF="${{ steps.decide.outputs.latest_susfs }}" \
+            -f BUILD_TYPE=auto
+
+      - name: No rebuild needed
+        if: ${{ steps.decide.outputs.should_build != 'true' }}
+        run: echo "${{ steps.decide.outputs.reason }}"
