@@ -12,7 +12,7 @@ KSU_REF=latest SUSFS_REF=latest "${SCRIPT_DIR}/resolve-refs.sh"
 source "${REFS_FILE}"
 
 python3 - "${REFS_FILE}" "${WORK_DIR}/update-decision.env" <<'PY'
-import json, os, pathlib, ssl, sys, urllib.request
+import json, os, pathlib, shlex, ssl, sys, urllib.request
 
 refs_path, out_path = sys.argv[1:3]
 refs = {}
@@ -86,18 +86,21 @@ if prev_kernel and latest_kernel and prev_kernel != latest_kernel:
 if should == "false":
     reasons.append("Kernel HEAD, KOW kernel/, and SUSFS unchanged")
 
+def env_line(key, value):
+    return f"{key}={shlex.quote(str(value))}"
+
 pathlib.Path(out_path).write_text(
     "\n".join(
         [
-            f"SHOULD_BUILD={should}",
-            f"PREV_KSU={prev_ksu}",
-            f"PREV_SUSFS={prev_susfs}",
-            f"PREV_KERNEL={prev_kernel}",
-            f"LATEST_KSU={latest_ksu}",
-            f"LATEST_SUSFS={latest_susfs}",
-            f"LATEST_KERNEL={latest_kernel}",
-            f"COMPARE_SOURCE={source}",
-            f"REASON={' | '.join(reasons)}",
+            env_line("SHOULD_BUILD", should),
+            env_line("PREV_KSU", prev_ksu),
+            env_line("PREV_SUSFS", prev_susfs),
+            env_line("PREV_KERNEL", prev_kernel),
+            env_line("LATEST_KSU", latest_ksu),
+            env_line("LATEST_SUSFS", latest_susfs),
+            env_line("LATEST_KERNEL", latest_kernel),
+            env_line("COMPARE_SOURCE", source),
+            env_line("REASON", " | ".join(reasons)),
         ]
     )
     + "\n",

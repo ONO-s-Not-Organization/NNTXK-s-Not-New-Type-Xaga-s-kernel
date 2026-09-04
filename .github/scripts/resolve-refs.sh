@@ -14,7 +14,7 @@ KSU_REF_IN="${KSU_REF:-latest}"
 SUSFS_REF_IN="${SUSFS_REF:-latest}"
 
 python3 - "${KSU_REF_IN}" "${SUSFS_REF_IN}" "${KSU_REPO}" "${SUSFS_BRANCH}" "${REFS_FILE}" <<'PY'
-import json, os, ssl, sys, urllib.request
+import json, os, shlex, ssl, sys, urllib.request
 
 ksu_in, susfs_in, ksu_repo, susfs_branch, refs_file = sys.argv[1:6]
 token = os.environ.get("GITHUB_TOKEN", "")
@@ -91,19 +91,22 @@ else:
     susfs_ref = resolve_susfs_sha(susfs_in)
     susfs_kind = "explicit"
 
+def env_line(key, value):
+    return f"{key}={shlex.quote(str(value))}"
+
 lines = [
-    f"KSU_REF={ksu_ref}",
-    f"KSU_REF_IN={ksu_in}",
-    f"KSU_KIND={ksu_kind}",
-    f"KSU_KERNEL_LATEST={ksu_kernel_sha}",
-    f"KSU_FALLBACK_TAG={ksu_tag}",
-    f"KSU_FALLBACK_TAG_SHA={ksu_tag_sha}",
-    f"SUSFS_REF={susfs_ref}",
-    f"SUSFS_REF_IN={susfs_in}",
-    f"SUSFS_KIND={susfs_kind}",
-    f"SUSFS_HEAD={susfs_head}",
-    f"SUSFS_FALLBACK_BUMP={susfs_bump_sha}",
-    f"SUSFS_FALLBACK_BUMP_TITLE={susfs_bump_title}",
+    env_line("KSU_REF", ksu_ref),
+    env_line("KSU_REF_IN", ksu_in),
+    env_line("KSU_KIND", ksu_kind),
+    env_line("KSU_KERNEL_LATEST", ksu_kernel_sha),
+    env_line("KSU_FALLBACK_TAG", ksu_tag),
+    env_line("KSU_FALLBACK_TAG_SHA", ksu_tag_sha),
+    env_line("SUSFS_REF", susfs_ref),
+    env_line("SUSFS_REF_IN", susfs_in),
+    env_line("SUSFS_KIND", susfs_kind),
+    env_line("SUSFS_HEAD", susfs_head),
+    env_line("SUSFS_FALLBACK_BUMP", susfs_bump_sha),
+    env_line("SUSFS_FALLBACK_BUMP_TITLE", susfs_bump_title),
 ]
 os.makedirs(os.path.dirname(refs_file) or ".", exist_ok=True)
 with open(refs_file, "w", encoding="utf-8") as fh:
