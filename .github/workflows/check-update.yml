@@ -19,6 +19,8 @@ jobs:
   check:
     runs-on: ubuntu-22.04
     timeout-minutes: 20
+    env:
+      SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
     steps:
       - name: Checkout overlay
         uses: actions/checkout@v4

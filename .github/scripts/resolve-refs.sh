@@ -14,17 +14,18 @@ KSU_REF_IN="${KSU_REF:-latest}"
 SUSFS_REF_IN="${SUSFS_REF:-latest}"
 
 python3 - "${KSU_REF_IN}" "${SUSFS_REF_IN}" "${KSU_REPO}" "${SUSFS_BRANCH}" "${REFS_FILE}" <<'PY'
-import json, os, sys, urllib.request
+import json, os, ssl, sys, urllib.request
 
 ksu_in, susfs_in, ksu_repo, susfs_branch, refs_file = sys.argv[1:6]
 token = os.environ.get("GITHUB_TOKEN", "")
+CTX = ssl.create_default_context(cafile="/etc/ssl/certs/ca-certificates.crt")
 
 def get(url):
     req = urllib.request.Request(url)
     if token and "api.github.com" in url:
         req.add_header("Authorization", f"Bearer {token}")
         req.add_header("Accept", "application/vnd.github+json")
-    with urllib.request.urlopen(req, timeout=60) as resp:
+    with urllib.request.urlopen(req, timeout=60, context=CTX) as resp:
         return json.load(resp)
 
 def latest_ksu_kernel_commit():

@@ -12,7 +12,7 @@ KSU_REF=latest SUSFS_REF=latest "${SCRIPT_DIR}/resolve-refs.sh"
 source "${REFS_FILE}"
 
 python3 - "${REFS_FILE}" "${WORK_DIR}/update-decision.env" <<'PY'
-import json, os, pathlib, sys, urllib.request
+import json, os, pathlib, ssl, sys, urllib.request
 
 refs_path, out_path = sys.argv[1:3]
 refs = {}
@@ -32,6 +32,7 @@ source = "none"
 
 token = os.environ.get("GITHUB_TOKEN", "")
 repo = os.environ.get("GITHUB_REPOSITORY", "")
+CTX = ssl.create_default_context(cafile="/etc/ssl/certs/ca-certificates.crt")
 if repo and token:
     try:
         req = urllib.request.Request(
@@ -41,7 +42,7 @@ if repo and token:
                 "Accept": "application/vnd.github+json",
             },
         )
-        with urllib.request.urlopen(req, timeout=60) as resp:
+        with urllib.request.urlopen(req, timeout=60, context=CTX) as resp:
             releases = json.loads(resp.read().decode())
         for rel in releases:
             tag = rel.get("tag_name", "")
@@ -56,7 +57,7 @@ if repo and token:
                             "Accept": "application/octet-stream",
                         },
                     )
-                    with urllib.request.urlopen(req2, timeout=60) as resp2:
+                    with urllib.request.urlopen(req2, timeout=60, context=CTX) as resp2:
                         info = json.loads(resp2.read().decode())
                     prev_ksu = info.get("kernelsu_kow") or ""
                     prev_susfs = info.get("susfs") or ""
