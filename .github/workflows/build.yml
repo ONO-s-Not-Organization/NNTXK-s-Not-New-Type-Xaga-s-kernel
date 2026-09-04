@@ -94,18 +94,6 @@ jobs:
       - name: Package AnyKernel zip
         run: bash .github/scripts/package.sh
 
-      - name: Upload debug artifacts on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: debug-${{ github.run_id }}
-          path: |
-            .ci-work/kernel.log
-            .ci-work/resolved-refs.env
-            out/.config
-            **/*.rej
-          if-no-files-found: warn
-
       - name: Create GitHub Release
         if: success()
         env:

@@ -15,7 +15,7 @@ need_cmd make
 [[ -f "${OUT_DIR}/.config" ]] || { err "run apply-config.sh first"; exit 1; }
 
 log "Building ${KERNEL_RELEASE} with timestamp ${KBUILD_BUILD_TIMESTAMP}"
-kernel_make -j"$(nproc)" 2>&1 | tee "${WORK_DIR}/kernel.log"
+kernel_make -j"$(nproc)"
 
 IMAGE="${OUT_DIR}/arch/arm64/boot/Image"
 IMAGE_GZ="${OUT_DIR}/arch/arm64/boot/Image.gz"

@@ -23,6 +23,23 @@ kernel_make gki_defconfig
 FRAGMENT="${CONFIG_DIR}/ksu-susfs.fragment"
 [[ -f "${FRAGMENT}" ]] || { err "missing ${FRAGMENT}"; exit 1; }
 
+# Fragment may only overlay KernelSU/SUSFS. Vendor/LTO belong to gki_defconfig.
+while IFS= read -r line || [[ -n "${line}" ]]; do
+  line="${line%$'\r'}"
+  [[ -z "${line}" ]] && continue
+  [[ "${line}" =~ ^[[:space:]]*# ]] && [[ ! "${line}" =~ CONFIG_ ]] && continue
+  if [[ "${line}" =~ CONFIG_([A-Za-z0-9_]+) ]]; then
+    key="CONFIG_${BASH_REMATCH[1]}"
+    case "${key}" in
+      CONFIG_KSU|CONFIG_KSU_*) ;;
+      *)
+        err "fragment overreach (only CONFIG_KSU*): ${key}"
+        exit 1
+        ;;
+    esac
+  fi
+done < "${FRAGMENT}"
+
 if [[ -x "${ROOT}/scripts/kconfig/merge_config.sh" ]]; then
   "${ROOT}/scripts/kconfig/merge_config.sh" -m -O "${OUT_DIR}" \
     "${OUT_DIR}/.config" "${FRAGMENT}"
