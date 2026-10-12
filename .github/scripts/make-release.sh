@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Create a unique GitHub pre-release only after a verified successful pack.
+# A successful auto pack deletes unofficial auto-* prereleases only.
+# Official auto-* (prerelease unchecked) and all manual-* are never deleted.
 set -euo pipefail
 # shellcheck source=common.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
@@ -136,3 +138,20 @@ gh release create "${NEXT}" \
   --notes "${BODY}"
 
 log "Created pre-release ${NEXT}"
+
+if [[ "${BUILD_TYPE}" == "auto" ]]; then
+  python3 - "${NEXT}" <<'PY'
+import json, subprocess, sys
+
+keep = sys.argv[1]
+raw = subprocess.check_output(
+    ["gh", "release", "list", "--limit", "200", "--json", "tagName,isPrerelease"],
+    text=True,
+)
+for rel in json.loads(raw):
+    tag = rel.get("tagName") or ""
+    if tag.startswith("auto-") and tag != keep and rel.get("isPrerelease"):
+        print(f"deleting unofficial auto build {tag}", flush=True)
+        subprocess.check_call(["gh", "release", "delete", tag, "--yes", "--cleanup-tag"])
+PY
+fi
